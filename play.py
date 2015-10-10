@@ -13,7 +13,12 @@ logger = logging.getLogger('main')
 player = player.gstreamer.Player()
 player.set_random_directory(config.RANDOM_PATH)
 
+player.cookie = config.CF_COOKIE
+player.user_agent = config.CF_USER_AGENT
+
 board = updater.updater.Board()
+board.req.cookies.set('cf_clearance', config.CF_COOKIE)
+board.req.headers['User-Agent'] = config.CF_USER_AGENT
 
 def on_empty_queue():
     logger.info('Queue is empty, updating')

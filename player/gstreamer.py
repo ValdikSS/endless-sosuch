@@ -40,12 +40,6 @@ class Player(object):
         self.bus.enable_sync_message_emission()
         self.bus.connect('sync-message::element', self.on_sync_message)
 
-        # Create GStreamer elements
-        self.playbin = Gst.ElementFactory.make('playbin', None)
-
-        # Add playbin to the pipeline
-        self.pipeline.add(self.playbin)
-        
         # Add video queue
         self.videoqueue = queue.Queue()
         self.randomdir = None
@@ -53,6 +47,18 @@ class Player(object):
         self.is_paused = False
         self.uri = None
         self.empty_queue_callback = None
+        self.user_agent = None
+        self.cookie = None
+
+        self.build_playbin()
+
+    def build_playbin(self):
+        # Create GStreamer elements
+        self.playbin = Gst.ElementFactory.make('playbin', None)
+        self.playbin.connect('notify::source', self.on_source)
+
+        # Add playbin to the pipeline
+        self.pipeline.add(self.playbin)
         
     def seturi(self, uri):
         # Set properties
@@ -137,8 +143,7 @@ class Player(object):
         self.logger.debug('on_eos()')
         self.stop()
         self.pipeline.remove(self.playbin)
-        self.playbin = Gst.ElementFactory.make('playbin', None)
-        self.pipeline.add(self.playbin)
+        self.build_playbin()
         self.seturi(self.get_queued_or_random())
         self.play()
 
@@ -146,6 +151,15 @@ class Player(object):
         self.logger.error('on_error(): {}'.format(msg.parse_error()))
         time.sleep(1)
         self.on_eos(None, None)
+
+    def on_source(self, bus, msg):
+        source = self.playbin.get_property('source')
+        try:
+            source.set_property('user-agent', self.user_agent) if self.user_agent else None
+            source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
+        except:
+            # We're here if the source is file
+            pass
 
     def on_key_release(self, window, ev, data=None):
         if ev.keyval == Gdk.KEY_s or ev.keyval == Gdk.KEY_S:

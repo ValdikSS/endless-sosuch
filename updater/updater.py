@@ -88,7 +88,7 @@ class Board(object):
 
     def parse_threads(self):
         for thread in self.threads:
-            if not thread.download():
+            if not thread.download(self.req):
                 self.logger.debug('removing thread')
                 self.threads.remove(thread)
             else:
