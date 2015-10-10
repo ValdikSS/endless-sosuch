@@ -8,6 +8,7 @@ import os
 import random
 import time
 import logging
+import glob
 
 GObject.threads_init()
 Gst.init(None)
@@ -96,7 +97,10 @@ class Player(object):
     def get_random(self):
         if self.randomdir is None:
             raise NoDirectoryException('Directory path is not set!')
-        return 'file://' + self.randomdir + '/' + random.choice(os.listdir(self.randomdir))
+        try:
+            return 'file://' + random.choice(glob.glob(self.randomdir + '/*.webm'))
+        except IndexError:
+            self.logger.error('Directory with random files is empty!')
 
     def get_queued_or_random(self):
         try:
