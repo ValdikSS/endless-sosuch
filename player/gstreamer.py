@@ -145,7 +145,7 @@ class Player(object):
     def on_error(self, bus, msg):
         self.logger.error('on_error(): {}'.format(msg.parse_error()))
         time.sleep(1)
-        self.on_eos()
+        self.on_eos(None, None)
 
     def on_key_release(self, window, ev, data=None):
         if ev.keyval == Gdk.KEY_s or ev.keyval == Gdk.KEY_S:
