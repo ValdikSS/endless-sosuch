@@ -16,3 +16,6 @@ Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN �
 * **q** or **Escape** to **q**uit
 * **f** to go **f**ullscreen
 * **Space** to **pause**
+
+### How to use
+Copy User-Agent and "cf_clearance" cookie into config.py and run play.py. Enjoy!
