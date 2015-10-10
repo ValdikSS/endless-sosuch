@@ -4,13 +4,14 @@ import player.gstreamer
 import updater.updater
 import signal
 import logging
+import config
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 logger = logging.getLogger('main')
 
 player = player.gstreamer.Player()
-player.set_random_directory('/home/valdikss/Pictures/2ch/webm/')
+player.set_random_directory(config.RANDOM_PATH)
 
 board = updater.updater.Board()
 
