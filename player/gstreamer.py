@@ -98,7 +98,7 @@ class Player(object):
         if self.randomdir is None:
             raise NoDirectoryException('Directory path is not set!')
         try:
-            return 'file://' + random.choice(glob.glob(self.randomdir + '/*.webm'))
+            return 'file://' + random.choice(glob.glob(os.path.abspath(self.randomdir) + '/*.webm'))
         except IndexError:
             self.logger.error('Directory with random files is empty!')
 
