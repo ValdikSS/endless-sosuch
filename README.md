@@ -12,6 +12,7 @@ Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN �
 
 ### Controls
 * **s** to **s**kip video
+* **d** to skip 10 videos
 * **q** or **Escape** to **q**uit
 * **f** to go **f**ullscreen
 * **Space** to **pause**
