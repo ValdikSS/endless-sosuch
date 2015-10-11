@@ -36,6 +36,7 @@ class Player(object):
         self.bus.add_signal_watch()
         self.bus.connect('message::eos', self.on_eos)
         self.bus.connect('message::error', self.on_error)
+        self.bus.connect('message::buffering', self.on_buffering)
 
         # This is needed to make the video output in our DrawingArea:
         self.bus.enable_sync_message_emission()
@@ -58,11 +59,8 @@ class Player(object):
         # Create GStreamer elements
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \
-            tee. ! queue name=decodequeue ! decodebin name=dec ! glimagesink \
+            tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec ! autovideosink \
             dec. ! autoaudiosink')
-        self.playbin.get_by_name('decodequeue').set_property('max-size-time', 5000000000)
-        self.playbin.get_by_name('decodequeue').set_property('min-threshold-bytes', 65536)
-        self.playbin.get_by_name('decodequeue').set_property('min-threshold-buffers', 6)
 
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
@@ -174,6 +172,13 @@ class Player(object):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             self.logger.debug('prepare-window-handle')
             msg.src.set_window_handle(self.xid)
+
+    def on_buffering(self, bus, msg):
+        buf = msg.parse_buffering()
+        if buf < 20:
+            self.pause()
+        elif buf == 100:
+            self.play()
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
