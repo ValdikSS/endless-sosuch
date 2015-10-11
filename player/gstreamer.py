@@ -165,11 +165,12 @@ class Player(object):
         if ev.keyval == Gdk.KEY_s or ev.keyval == Gdk.KEY_S:
             self.on_eos(None, None)
         if ev.keyval == Gdk.KEY_d or ev.keyval == Gdk.KEY_d:
-            for i in range(10):
+            for i in range(9):
                 try:
                     self.videoqueue.get_nowait()
                 except queue.Empty:
-                    pass
+                    break
+            self.on_eos()
             # get random video from folder
         elif ev.keyval == Gdk.KEY_Escape or ev.keyval == Gdk.KEY_q or ev.keyval == Gdk.KEY_Q:
             self.quit()
