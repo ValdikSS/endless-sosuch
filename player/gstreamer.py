@@ -73,8 +73,10 @@ class Player(object):
             if self.file_save_dir and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
                 filesink = Gst.ElementFactory.make('filesink' ,'filesink')
                 filesink.set_property('location', self.file_save_dir + '/' + os.path.basename(uri))
+                filesink.set_property('async', False)
             else:
                 filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
+                filesink.set_property('async', False)
         else:
             source = Gst.ElementFactory.make('filesrc' ,'uri')
             filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
