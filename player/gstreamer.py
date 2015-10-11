@@ -18,7 +18,7 @@ class NoDirectoryException(Exception):
     pass
 
 class Player(object):
-    def __init__(self, file_save_dir=False):
+    def __init__(self, file_save_dir=False, use_compressor=False):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
@@ -46,6 +46,7 @@ class Player(object):
         self.videoqueue = queue.Queue()
         self.randomdir = None
         self.file_save_dir = file_save_dir
+        self.use_compressor = use_compressor
         self.window_is_fullscreen = False
         self.is_paused = False
         self.uri = None
@@ -60,7 +61,7 @@ class Player(object):
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \
             tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec ! autovideosink \
-            dec. ! autoaudiosink')
+            dec. ! ' + ('audiodynamic ! ' if self.use_compressor else '') + 'autoaudiosink')
 
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
