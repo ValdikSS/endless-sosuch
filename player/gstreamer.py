@@ -58,8 +58,11 @@ class Player(object):
         # Create GStreamer elements
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \
-            tee. ! queue ! decodebin name=dec ! glimagesink \
+            tee. ! queue name=decodequeue ! decodebin name=dec ! glimagesink \
             dec. ! autoaudiosink')
+        self.playbin.get_by_name('decodequeue').set_property('max-size-time', 5000000000)
+        self.playbin.get_by_name('decodequeue').set_property('min-threshold-bytes', 65536)
+        self.playbin.get_by_name('decodequeue').set_property('min-threshold-buffers', 6)
 
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
