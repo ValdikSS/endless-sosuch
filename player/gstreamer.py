@@ -58,7 +58,7 @@ class Player(object):
         # Create GStreamer elements
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \
-            tee. ! queue ! decodebin name=dec ! autovideosink \
+            tee. ! queue ! decodebin name=dec ! glimagesink \
             dec. ! autoaudiosink')
 
         # Add playbin to the pipeline
