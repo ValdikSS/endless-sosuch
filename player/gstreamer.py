@@ -61,7 +61,11 @@ class Player(object):
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \
             tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec ! autovideosink \
-            dec. ! ' + ('audiodynamic ! ' if self.use_compressor else '') + 'autoaudiosink')
+            dec. ! ' + ('audioconvert ! \
+                ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
+                ladspa-amp-so-amp-stereo gain=9 ! \
+                ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter ! ' if self.use_compressor else '') \
+                    + 'autoaudiosink')
 
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
