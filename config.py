@@ -14,4 +14,4 @@ CF_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:41.0) Gecko/20100101 Firefox
 
 # Use audio compressor and limiter to normalize volume level between different video files
 # Requires LADSPA with swh-plugins
-AUDIO_COMPRESSOR = True
+AUDIO_COMPRESSOR = False
