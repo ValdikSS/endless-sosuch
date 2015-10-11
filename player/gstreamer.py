@@ -70,7 +70,7 @@ class Player(object):
             source.set_property('user-agent', self.user_agent) if self.user_agent else None
             source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
 
-            if file_save_dir and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
+            if self.file_save_dir and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
                 filesink = Gst.ElementFactory.make('filesink' ,'filesink')
                 filesink.set_property('location', self.file_save_dir + '/' + os.path.basename(uri))
             else:
