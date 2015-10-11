@@ -7,6 +7,7 @@ Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN �
 ### Requirements:
 * Python 3
 * Gstreamer 1.0 + python-gst
+* LADSPA with swh-plugins for compressor and limiter (to calm down JOHN CENA)
 * Requests
 * PyQuery
 
