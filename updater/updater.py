@@ -14,8 +14,8 @@ class Thread(object):
         self.data = None
         self.videos = list()
         self.lastupdated = None
-        self.old_latest_video_index = -1
-        self.latest_video_index = -1
+        self.old_latest_video_index = 0
+        self.latest_video_index = 0
 
     def __str__(self):
         return self.url
@@ -39,15 +39,16 @@ class Thread(object):
         return True
 
     def parsevideos(self):
+        self.videos.clear()
+
         parser = pyquery.PyQuery(self.data.text)
         root = parser(".post-wrapper")
 
-        for i, post in enumerate(root):
+        for post in root:
             is_webm = pyquery.PyQuery(post)(".webm-file")
             if is_webm:
-                if i >= self.latest_video_index:
-                    webm = is_webm.parent().attr('href')
-                    self.videos.append(BASEURL + webm)
+                webm = is_webm.parent().attr('href')
+                self.videos.append(BASEURL + webm)
         self.logger.info("New videos: {}".format(len(self.videos) - self.latest_video_index))
         self.old_latest_video_index = self.latest_video_index
         self.latest_video_index = len(self.videos)
