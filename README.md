@@ -2,7 +2,7 @@
 
 **Never stop watching WebM threads from 2ch.hk.**  
 This script searches for WebM threads on a popular Russian imageboard 2ch.hk (formely 2ch.so, sosuch) and plays all the video files found.
-Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN † - ama ama ama, Primo Victoria spinnings, kokovin93, Imya 505, Alexander Pistoletov, Green Elephant, My Little Pony, Korean PVs and MVs now on your desktop, _endlessly_!
+Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN † - ama ama ama, Primo Victoria spinnings, kokovin93, Imya 505, Alexander Pistoletov, Green Elephant, My Little Pony, Korean PVs and MVs now on your desktop, _endlessly_! All played files could be saved in a directory.
 
 ### Requirements:
 * Python 3

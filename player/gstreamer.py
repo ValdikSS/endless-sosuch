@@ -5,6 +5,7 @@ from gi.repository import GObject, Gst, Gtk, Gdk
 from gi.repository import GdkX11, GstVideo
 import queue
 import os
+import os.path
 import random
 import time
 import logging
@@ -17,7 +18,7 @@ class NoDirectoryException(Exception):
     pass
 
 class Player(object):
-    def __init__(self):
+    def __init__(self, file_save_dir=False):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
@@ -43,6 +44,7 @@ class Player(object):
         # Add video queue
         self.videoqueue = queue.Queue()
         self.randomdir = None
+        self.file_save_dir = file_save_dir
         self.window_is_fullscreen = False
         self.is_paused = False
         self.uri = None
@@ -54,15 +56,36 @@ class Player(object):
 
     def build_playbin(self):
         # Create GStreamer elements
-        self.playbin = Gst.ElementFactory.make('playbin', None)
-        self.playbin.connect('notify::source', self.on_source)
+        self.playbin = Gst.parse_launch('tee name=tee \
+            tee. ! queue name=filequeue \
+            tee. ! queue ! decodebin name=dec ! autovideosink \
+            dec. ! autoaudiosink')
 
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
         
     def seturi(self, uri):
-        # Set properties
-        self.playbin.set_property('uri', uri)
+        if 'http://' in uri or 'https://' in uri:
+            source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
+            source.set_property('user-agent', self.user_agent) if self.user_agent else None
+            source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
+
+            if file_save_dir and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
+                filesink = Gst.ElementFactory.make('filesink' ,'filesink')
+                filesink.set_property('location', self.file_save_dir + '/' + os.path.basename(uri))
+            else:
+                filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
+        else:
+            source = Gst.ElementFactory.make('filesrc' ,'uri')
+            filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
+
+        self.playbin.add(source)
+        self.playbin.add(filesink)
+        source.link(self.pipeline.get_by_name('tee'))
+        self.pipeline.get_by_name('filequeue').link(filesink)
+
+        self.pipeline.get_by_name('uri').set_property('location', uri)
+
         self.uri = uri
 
     def run(self):
@@ -84,11 +107,19 @@ class Player(object):
         self.pipeline.set_state(Gst.State.PAUSED)
         self.is_paused = True
         
-    def stop(self):
+    def stop(self, should_delete=False):
+        if should_delete:
+            try:
+                location = self.pipeline.get_by_name('filesink').get_property('location')
+                os.remove(location)
+            except:
+                pass
+
         self.pipeline.set_state(Gst.State.NULL)
+        self.pipeline.remove(self.playbin)
     
     def quit(self, window = None):
-        self.stop()
+        self.stop(True)
         Gtk.main_quit()
 
     def set_random_directory(self, randomdir):
@@ -104,7 +135,7 @@ class Player(object):
         if self.randomdir is None:
             raise NoDirectoryException('Directory path is not set!')
         try:
-            return 'file://' + random.choice(glob.glob(os.path.abspath(self.randomdir) + '/*.webm'))
+            return random.choice(glob.glob(os.path.abspath(self.randomdir) + '/*.webm'))
         except IndexError:
             self.logger.error('Directory with random files is empty!')
 
@@ -141,8 +172,7 @@ class Player(object):
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
-        self.stop()
-        self.pipeline.remove(self.playbin)
+        self.stop(not(bus))
         self.build_playbin()
         self.seturi(self.get_queued_or_random())
         self.play()
@@ -152,18 +182,9 @@ class Player(object):
         time.sleep(1)
         self.on_eos()
 
-    def on_source(self, bus, msg):
-        source = self.playbin.get_property('source')
-        try:
-            source.set_property('user-agent', self.user_agent) if self.user_agent else None
-            source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
-        except:
-            # We're here if the source is file
-            pass
-
     def on_key_release(self, window, ev, data=None):
         if ev.keyval == Gdk.KEY_s or ev.keyval == Gdk.KEY_S:
-            self.on_eos(None, None)
+            self.on_eos()
         if ev.keyval == Gdk.KEY_d or ev.keyval == Gdk.KEY_d:
             for i in range(9):
                 try:

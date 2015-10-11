@@ -3,6 +3,9 @@
 # Path to directory with WebM files
 RANDOM_PATH = 'webm'
 
+# Should we save all played to the end files to that directory?
+SAVE_FILES = True
+
 # Cloudflare "cf_clearance" cookie value:
 CF_COOKIE = '861a0566de1421f863f81936700d70e6f9d15356-1444513397-604800'
 
