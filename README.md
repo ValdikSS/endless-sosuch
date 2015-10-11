@@ -1,8 +1,33 @@
+# Бесконечный Сосач
+
+**Смотрите WebM-треды с 2ch.hk без перерыва**  
+Этот скрипт ищет WebM-треды на популярной Российской имиджборде 2ch.hk (ранее находящейся по адресу 2ch.so, сосач) и воспроизводит все найденные видеофайлы.
+Обычная и детская порнография, Джон Сина, Everybody knows shit's fucked, † CΛIN † - ama ama ama, спины с Primo Victoria, kokovin93, Имя 505, Алесандр Пистолетов, Зеленый Слоник, My Little Pony, Корейские PV и MV, теперь на вашем десктопе, _бесконечно_! Все воспроизводимые файлы можно сохранять в директорию.
+
+### Зависимости
+* Python 3
+* Gstreamer 1.0 + python-gst
+* LADSPA с swh-plugins для компрессора и лимитера (чтобы успокоить ДЖОНА СИНУ)
+* Requests
+* PyQuery
+
+### Управление
+* **s** для пропуска видео
+* **d** для пропуска 10 видео
+* **q** или **Escape** для выхода
+* **f** чтобы перейти в полноэкранный режим
+* **Space** для паузы
+
+### Как использовать
+Скопируйте User-Agent и cookie "cf_clearance" из своего браузера в config.py и запустите play.py. Наслаждайтесь!
+
+--------------------------------------------
+
 # Endless Sosuch
 
 **Never stop watching WebM threads from 2ch.hk.**  
 This script searches for WebM threads on a popular Russian imageboard 2ch.hk (formely 2ch.so, sosuch) and plays all the video files found.
-Usual porn and child porn, John Sena, Everybody knows shit's fucked, † CΛIN † - ama ama ama, Primo Victoria spinnings, kokovin93, Imya 505, Alexander Pistoletov, Green Elephant, My Little Pony, Korean PVs and MVs now on your desktop, _endlessly_! All played files could be saved in a directory.
+Regular and child porn, John Cena, Everybody knows shit's fucked, † CΛIN † - ama ama ama, Primo Victoria spinnings, kokovin93, Imya 505, Alexander Pistoletov, Green Elephant, My Little Pony, Korean PVs and MVs now on your desktop, _endlessly_! All played files could be saved in a directory.
 
 ### Requirements:
 * Python 3
