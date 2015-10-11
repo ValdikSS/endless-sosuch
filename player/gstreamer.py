@@ -139,7 +139,7 @@ class Player(object):
             self.logger.debug('prepare-window-handle')
             msg.src.set_window_handle(self.xid)
 
-    def on_eos(self, bus, msg):
+    def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
         self.stop()
         self.pipeline.remove(self.playbin)
@@ -150,7 +150,7 @@ class Player(object):
     def on_error(self, bus, msg):
         self.logger.error('on_error(): {}'.format(msg.parse_error()))
         time.sleep(1)
-        self.on_eos(None, None)
+        self.on_eos()
 
     def on_source(self, bus, msg):
         source = self.playbin.get_property('source')
