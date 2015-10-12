@@ -42,13 +42,11 @@ class Thread(object):
         self.videos.clear()
 
         parser = pyquery.PyQuery(self.data.text)
-        root = parser(".post-wrapper")
+        root = parser("img.webm-file")
 
-        for post in root:
-            is_webm = pyquery.PyQuery(post)(".webm-file")
-            if is_webm:
-                webm = is_webm.parent().attr('href')
-                self.videos.append(BASEURL + webm)
+        for i in root:
+            webm = pyquery.PyQuery(i).parent().attr('href')
+            self.videos.append(BASEURL + webm)
         self.logger.info("New videos: {}".format(len(self.videos) - self.latest_video_index))
         self.old_latest_video_index = self.latest_video_index
         self.latest_video_index = len(self.videos)
