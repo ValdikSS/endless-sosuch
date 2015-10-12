@@ -76,7 +76,7 @@ class Board(object):
         parser = json.loads(self.data.text)
 
         for thread in parser['threads']:
-                url = thread['posts'][0]['num'] + '.json'
+                url = '/res/' + thread['posts'][0]['num'] + '.json'
                 body = thread['posts'][0]['comment']
                 is_webm = any(['webm' in file['path'] for file in thread['posts'][0]['files']])
                 if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])', body) and is_webm:
