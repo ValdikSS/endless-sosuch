@@ -18,7 +18,7 @@ class NoDirectoryException(Exception):
     pass
 
 class Player(object):
-    def __init__(self, file_save_dir=False, use_compressor=False):
+    def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink'):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
@@ -47,6 +47,8 @@ class Player(object):
         self.randomdir = None
         self.file_save_dir = file_save_dir
         self.use_compressor = use_compressor
+        self.video_sink = video_sink
+        self.audio_sink = audio_sink
         self.window_is_fullscreen = False
         self.is_paused = True
         self.uri = None
@@ -58,11 +60,11 @@ class Player(object):
 
     def build_playbin(self):
         # Create GStreamer elements
-        self.videobin = Gst.ElementFactory.make('glimagesink' ,'videosink')
+        self.videobin = Gst.ElementFactory.make(self.video_sink ,'videosink')
         self.audiobin = Gst.parse_launch('audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor else '') \
-                    + 'autoaudiosink')
+                    + self.audio_sink)
 
         self.playbin = Gst.parse_launch('tee name=tee \
             tee. ! queue name=filequeue \

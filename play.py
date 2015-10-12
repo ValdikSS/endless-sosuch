@@ -10,7 +10,12 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 logger = logging.getLogger('main')
 
-player = player.gstreamer.Player(config.RANDOM_PATH if config.SAVE_FILES else None, config.AUDIO_COMPRESSOR)
+player = player.gstreamer.Player(
+    config.RANDOM_PATH if config.SAVE_FILES else None,
+    config.AUDIO_COMPRESSOR,
+    config.GSTREAMER_VIDEO_SINK,
+    config.GSTREAMER_AUDIO_SINK
+)
 player.set_random_directory(config.RANDOM_PATH)
 
 player.cookie = config.CF_COOKIE
