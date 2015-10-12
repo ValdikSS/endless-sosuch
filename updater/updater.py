@@ -14,8 +14,8 @@ class Thread(object):
         self.data = None
         self.videos = list()
         self.lastupdated = None
-        self.old_latest_video_index = 0
-        self.latest_video_index = 0
+        self.old_latest_video_index = -1
+        self.latest_video_index = -1
 
     def __str__(self):
         return self.url
