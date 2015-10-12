@@ -9,7 +9,6 @@
 * Gstreamer 1.0 + python-gst
 * LADSPA с swh-plugins для компрессора и лимитера (чтобы успокоить ДЖОНА СИНУ)
 * Requests
-* PyQuery
 
 ### Управление
 * **s** для пропуска видео
@@ -34,7 +33,6 @@ Regular and child porn, John Cena, Everybody knows shit's fucked, † CΛIN † 
 * Gstreamer 1.0 + python-gst
 * LADSPA with swh-plugins for compressor and limiter (to calm down JOHN CENA)
 * Requests
-* PyQuery
 
 ### Controls
 * **s** to **s**kip video

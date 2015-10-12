@@ -1,11 +1,11 @@
 # coding: utf-8
 import requests
-import pyquery
+import json
 import re
 import logging
 
-URL = 'https://2ch.hk/b/'
-BASEURL = 'https://2ch.hk'
+URL = 'https://2ch.hk/b/index.json'
+BASEURL = 'https://2ch.hk/b/'
 
 class Thread(object):
     def __init__(self, url=None):
@@ -41,12 +41,13 @@ class Thread(object):
     def parsevideos(self):
         self.videos.clear()
 
-        parser = pyquery.PyQuery(self.data.text)
-        root = parser("img.webm-file")
+        parser = json.loads(self.data.text)
+        for post in parser['threads'][0]['posts']:
+            for postfile in post['files']:
+                if '.webm' in postfile['path']:
+                    webm = BASEURL + postfile['path']
+                    self.videos.append(webm)
 
-        for i in root:
-            webm = pyquery.PyQuery(i).parent().attr('href')
-            self.videos.append(BASEURL + webm)
         self.logger.info("New videos: {}".format(len(self.videos) - self.latest_video_index))
         self.old_latest_video_index = self.latest_video_index
         self.latest_video_index = len(self.videos)
@@ -72,18 +73,16 @@ class Board(object):
         self.data = self.req.get(URL)
 
     def find_threads(self):
-        parser = pyquery.PyQuery(self.data.text)
-        root = parser("div.oppost-wrapper")
-        
-        for thread in root:
-            url = pyquery.PyQuery(thread)(".orange").attr('href')
-            body = pyquery.PyQuery(thread)(".post-message:first").text()
-            op_data = pyquery.PyQuery(thread)("a.desktop").attr('href')
-            is_webm = pyquery.PyQuery(thread)(".webm-file")
-            if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])', body) and is_webm:
-                if Thread(url) not in self.threads:
-                    self.logger.info('Found new Webm thread: {}'.format(BASEURL + op_data))
-                    self.threads.append(Thread(url))
+        parser = json.loads(self.data.text)
+
+        for thread in parser['threads']:
+                url = thread['posts'][0]['num'] + '.json'
+                body = thread['posts'][0]['comment']
+                is_webm = any(['webm' in file['path'] for file in thread['posts'][0]['files']])
+                if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])', body) and is_webm:
+                    if Thread(url) not in self.threads:
+                        self.logger.info('Found new Webm thread: {}'.format(BASEURL + url))
+                        self.threads.append(Thread(url))
 
     def parse_threads(self):
         for thread in self.threads:
