@@ -58,17 +58,20 @@ class Player(object):
 
     def build_playbin(self):
         # Create GStreamer elements
-        self.playbin = Gst.parse_launch('tee name=tee \
-            tee. ! queue name=filequeue \
-            tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec ! autovideosink \
-            dec. ! ' + ('audioconvert ! \
-                ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
+        self.videobin = Gst.ElementFactory.make('autovideosink' ,'videosink')
+        self.audiobin = Gst.parse_launch('audioconvert name=audiosink ! ' + \
+                ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-amp-so-amp-stereo gain=9 ! \
                 ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter ! ' if self.use_compressor else '') \
                     + 'autoaudiosink')
 
+        self.playbin = Gst.parse_launch('tee name=tee \
+            tee. ! queue name=filequeue \
+            tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec')
+
         # Add playbin to the pipeline
         self.pipeline.add(self.playbin)
+        self.playbin.get_by_name('dec').connect('pad-added', self.on_pad_added)
         
     def seturi(self, uri):
         if 'http://' in uri or 'https://' in uri:
@@ -184,6 +187,19 @@ class Player(object):
             self.pause()
         elif buf == 100:
             self.play()
+
+    def on_pad_added(self, element, pad):
+        string = pad.query_caps(None).to_string()
+        self.logger.debug('Pad added: {}'.format(string))
+        if string.startswith('audio/'):
+            self.playbin.add(self.audiobin)
+            self.playbin.get_by_name('dec').link(self.playbin.get_by_name('audiosink'))
+            self.audiobin.set_state(Gst.State.PLAYING)
+            pass
+        if string.startswith('video/'):
+            self.playbin.add(self.videobin)
+            self.playbin.get_by_name('dec').link(self.playbin.get_by_name('videosink'))
+            self.videobin.set_state(Gst.State.PLAYING)
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
