@@ -48,7 +48,7 @@ class Player(object):
         self.file_save_dir = file_save_dir
         self.use_compressor = use_compressor
         self.window_is_fullscreen = False
-        self.is_paused = False
+        self.is_paused = True
         self.uri = None
         self.empty_queue_callback = None
         self.user_agent = None
@@ -110,11 +110,17 @@ class Player(object):
         Gtk.main()
         
     def play(self):
+        if not self.is_paused:
+            return
+
         self.pipeline.set_state(Gst.State.PLAYING)
         self.logger.info('Playing {}'.format(self.uri))
         self.is_paused = False
 
     def pause(self):
+        if self.is_paused:
+            return
+
         self.pipeline.set_state(Gst.State.PAUSED)
         self.is_paused = True
         
@@ -128,6 +134,7 @@ class Player(object):
 
         self.pipeline.set_state(Gst.State.NULL)
         self.pipeline.remove(self.playbin)
+        self.is_paused = True
     
     def quit(self, window = None):
         self.stop(True)
@@ -185,7 +192,7 @@ class Player(object):
         buf = msg.parse_buffering()
         if buf < 20:
             self.pause()
-        elif buf == 100:
+        elif buf >= 80:
             self.play()
 
     def on_pad_added(self, element, pad):
