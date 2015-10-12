@@ -58,7 +58,7 @@ class Player(object):
 
     def build_playbin(self):
         # Create GStreamer elements
-        self.videobin = Gst.ElementFactory.make('autovideosink' ,'videosink')
+        self.videobin = Gst.ElementFactory.make('glimagesink' ,'videosink')
         self.audiobin = Gst.parse_launch('audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-amp-so-amp-stereo gain=9 ! \
