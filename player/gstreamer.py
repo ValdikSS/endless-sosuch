@@ -61,8 +61,7 @@ class Player(object):
         self.videobin = Gst.ElementFactory.make('glimagesink' ,'videosink')
         self.audiobin = Gst.parse_launch('audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
-                ladspa-amp-so-amp-stereo gain=9 ! \
-                ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter ! ' if self.use_compressor else '') \
+                ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor else '') \
                     + 'autoaudiosink')
 
         self.playbin = Gst.parse_launch('tee name=tee \
