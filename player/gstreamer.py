@@ -218,7 +218,7 @@ class Player(object):
         self.stop(not(bus))
         self.build_playbin()
         uri = self.get_queued_or_random()
-        self.seturi(self.get_queued_or_random())
+        self.seturi(uri)
         self.play()
 
     def on_error(self, bus, msg):
