@@ -100,12 +100,12 @@ class Player(object):
         self.is_paused = True
         
     def stop(self, should_delete=False):
+        self.vlc.stop()
+        self.is_paused = True
+
         if should_delete and ('http://' in self.uri or 'https://' in self.uri) \
             and self.file_save_dir:
                 os.remove(self.file_save_dir + '/' + os.path.basename(self.uri))
-
-        self.vlc.stop()
-        self.is_paused = True
     
     def quit(self, window = None):
         self.stop(True)
