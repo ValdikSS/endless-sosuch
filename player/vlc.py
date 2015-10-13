@@ -60,10 +60,10 @@ class Player(object):
 
     def seturi(self, uri):
         media = self.instance.media_new(uri)
-        if 'http://' in uri or 'https://' in uri and self.file_save_dir \
+        if ('http://' in uri or 'https://' in uri) and self.file_save_dir \
             and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
                 media.add_option(':sout=#duplicate{dst=display,dst=std{access=file,dst="' +\
-                    self.file_save_dir + '/' + os.path.basename(uri) + '"g}}')
+                    self.file_save_dir + '/' + os.path.basename(uri) + '"}}')
         
         self.vlc.set_media(media)
         self.window.set_title('Endless Sosuch | ' + os.path.basename(uri))
@@ -100,7 +100,7 @@ class Player(object):
         self.is_paused = True
         
     def stop(self, should_delete=False):
-        if should_delete and 'http://' in self.uri or 'https://' in self.uri \
+        if should_delete and ('http://' in self.uri or 'https://' in self.uri) \
             and self.file_save_dir:
                 os.remove(self.file_save_dir + '/' + os.path.basename(self.uri))
 
