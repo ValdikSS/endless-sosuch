@@ -23,6 +23,7 @@ class Player(object):
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
         self.window.set_default_size(800, 450)
+        self.window.set_title('Endless Sosuch')
 
         self.drawingarea = Gtk.DrawingArea()
         self.window.add(self.drawingarea)
@@ -97,6 +98,7 @@ class Player(object):
         self.pipeline.get_by_name('filequeue').link(filesink)
 
         self.pipeline.get_by_name('uri').set_property('location', uri)
+        self.window.set_title('Endless Sosuch | ' + os.path.basename(uri))
 
         self.uri = uri
 
@@ -215,6 +217,7 @@ class Player(object):
         self.logger.debug('on_eos()')
         self.stop(not(bus))
         self.build_playbin()
+        uri = self.get_queued_or_random()
         self.seturi(self.get_queued_or_random())
         self.play()
 
