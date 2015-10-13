@@ -78,7 +78,7 @@ class Player(object):
         self.vlc.set_xwindow(self.xid)
         self.vlc.event_manager().event_attach(vlc.EventType.MediaPlayerEndReached, self.on_eos, 1)
         self.vlc.event_manager().event_attach(vlc.EventType.MediaPlayerEncounteredError, self.on_error, 1)
-        self.instance.set_user_agent(self.user_agent)
+        self.instance.set_user_agent('http', self.user_agent)
         self.seturi(self.get_queued_or_random())
         self.play()
         
