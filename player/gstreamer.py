@@ -10,6 +10,9 @@ import random
 import time
 import logging
 import glob
+import sys
+if sys.platform == 'win32':
+    import ctypes
 
 GObject.threads_init()
 Gst.init(None)
@@ -107,7 +110,15 @@ class Player(object):
         # You need to get the XID after window.show_all().  You shouldn't get it
         # in the on_sync_message() handler because threading issues will cause
         # segfaults there.
-        self.xid = self.drawingarea.get_property('window').get_xid()
+        videowindow = self.drawingarea.get_property('window')
+        if sys.platform == 'win32':
+            ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.c_void_p
+            ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object]
+            drawingarea_gpointer = ctypes.pythonapi.PyCapsule_GetPointer(videowindow.__gpointer__, None)
+            gdkdll = ctypes.CDLL ("libgdk-3-0.dll")
+            self.xid = gdkdll.gdk_win32_window_get_handle(drawingarea_gpointer)
+        else:
+            self.xid = videowindow.get_xid()
         self.seturi(self.get_queued_or_random())
         self.play()
         Gtk.main()
