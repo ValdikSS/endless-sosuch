@@ -126,15 +126,17 @@ class Player(object):
         self.is_paused = True
         
     def stop(self, should_delete=False):
+        location = None
         if should_delete:
             try:
                 location = self.pipeline.get_by_name('filesink').get_property('location')
-                os.remove(location)
             except:
                 pass
 
         self.pipeline.set_state(Gst.State.NULL)
         self.pipeline.remove(self.playbin)
+        if location:
+            os.remove(location)
         self.is_paused = True
     
     def quit(self, window = None):
