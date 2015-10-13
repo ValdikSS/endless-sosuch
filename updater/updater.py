@@ -3,9 +3,13 @@ import requests
 import json
 import re
 import logging
+import sys
 
 URL = 'https://2ch.hk/b/index.json'
 BASEURL = 'https://2ch.hk/b/'
+if sys.platform == 'win32':
+    # GnuTLS crashes on HTTPS, dunno why.
+    BASEURL = 'http://2ch.hk/b/'
 
 class Thread(object):
     def __init__(self, url=None):
