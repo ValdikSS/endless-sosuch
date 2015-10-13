@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import player.gstreamer
+import player.vlc
 import updater.updater
 import signal
 import logging
@@ -10,12 +11,24 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 logger = logging.getLogger('main')
 
-player = player.gstreamer.Player(
-    config.RANDOM_PATH if config.SAVE_FILES else None,
-    config.AUDIO_COMPRESSOR,
-    config.GSTREAMER_VIDEO_SINK,
-    config.GSTREAMER_AUDIO_SINK
-)
+if config.BACKEND == 'gstreamer':
+    player = player.gstreamer.Player(
+        config.RANDOM_PATH if config.SAVE_FILES else None,
+        config.AUDIO_COMPRESSOR,
+        config.GSTREAMER_VIDEO_SINK,
+        config.GSTREAMER_AUDIO_SINK
+    )
+elif config.BACKEND == 'vlc':
+    player = player.vlc.Player(
+        config.RANDOM_PATH if config.SAVE_FILES else None,
+        config.AUDIO_COMPRESSOR,
+        config.VLC_VIDEO_SINK,
+        config.VLC_AUDIO_SINK
+    )
+else:
+    logger.error('No working backend set!')
+    quit()
+
 player.set_random_directory(config.RANDOM_PATH)
 
 player.cookie = config.CF_COOKIE
