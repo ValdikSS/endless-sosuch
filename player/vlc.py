@@ -5,6 +5,7 @@ from gi.repository import GObject, Gst, Gtk, Gdk
 from gi.repository import GdkX11
 import queue
 import os
+import sys
 import os.path
 import random
 import time
@@ -33,8 +34,10 @@ class Player(object):
         self.window.add(self.drawingarea)
         self.window.connect("key-release-event", self.on_key_release)
 
-        self.x11 = ctypes.cdll.LoadLibrary('libX11.so')
-        self.x11.XInitThreads()
+        if sys.platform == 'linux':
+            self.x11 = ctypes.cdll.LoadLibrary('libX11.so')
+            self.x11.XInitThreads()
+
         self.instance = vlc.Instance('--sout-mux-caching 100 ' + 
                                      ('--vout ' + video_sink if video_sink else '') +
                                      ('--aout ' + audio_sink if audio_sink else '') +
@@ -74,8 +77,18 @@ class Player(object):
         # You need to get the XID after window.show_all().  You shouldn't get it
         # in the on_sync_message() handler because threading issues will cause
         # segfaults there.
-        self.xid = self.drawingarea.get_property('window').get_xid()
-        self.vlc.set_xwindow(self.xid)
+        videowindow = self.drawingarea.get_property('window')
+        if sys.platform == 'win32':
+            ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.c_void_p
+            ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object]
+            drawingarea_gpointer = ctypes.pythonapi.PyCapsule_GetPointer(videowindow.__gpointer__, None)
+            gdkdll = ctypes.CDLL ("libgdk-3-0.dll")
+            self.xid = gdkdll.gdk_win32_window_get_handle(drawingarea_gpointer)
+            self.vlc.set_hwnd(self.xid)
+        else:
+            self.xid = videowindow.get_xid()
+            self.vlc.set_xwindow(self.xid)
+
         self.vlc.event_manager().event_attach(vlc.EventType.MediaPlayerEndReached, self.on_eos, 1)
         self.vlc.event_manager().event_attach(vlc.EventType.MediaPlayerEncounteredError, self.on_error, 1)
         self.instance.set_user_agent('http', self.user_agent)
