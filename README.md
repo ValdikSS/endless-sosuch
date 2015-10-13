@@ -6,7 +6,7 @@
 
 ### Зависимости
 * Python 3
-* Gstreamer 1.0 + python-gst
+* Gstreamer 1.0 + python-gst или VLC
 * LADSPA с swh-plugins для компрессора и лимитера (чтобы успокоить ДЖОНА СИНУ)
 * Requests
 
@@ -30,7 +30,7 @@ Regular and child porn, John Cena, Everybody knows shit's fucked, † CΛIN † 
 
 ### Requirements:
 * Python 3
-* Gstreamer 1.0 + python-gst
+* Gstreamer 1.0 + python-gst or VLC
 * LADSPA with swh-plugins for compressor and limiter (to calm down JOHN CENA)
 * Requests
 
