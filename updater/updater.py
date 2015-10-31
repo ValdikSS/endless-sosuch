@@ -87,6 +87,8 @@ class Board(object):
                     if Thread(url) not in self.threads:
                         self.logger.info('Found new Webm thread: {}'.format(BASEURL + url))
                         self.threads.append(Thread(url))
+        if not self.threads:
+            self.logger.info('No threads found!')
 
     def parse_threads(self):
         for thread in self.threads:
