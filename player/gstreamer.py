@@ -163,7 +163,7 @@ class Player(object):
         location = None
         if should_delete:
             try:
-                location = self.pipeline.get_by_name('filesink').get_property('location')
+                location = self.filesink.get_property('location')
             except:
                 pass
 
