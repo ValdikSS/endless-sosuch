@@ -24,6 +24,9 @@ class NoDirectoryException(Exception):
     pass
 
 class Player(object):
+    cursor_none = Gdk.Cursor.new(Gdk.CursorType.BLANK_CURSOR)
+    cursor_left = Gdk.Cursor.new(Gdk.CursorType.LEFT_PTR)
+
     def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink'):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
@@ -189,9 +192,11 @@ class Player(object):
     def toggle_fullscreen(self):
         if not self.window_is_fullscreen:
             self.window.fullscreen()
+            self.window.get_window().set_cursor(self.cursor_none)
             self.window_is_fullscreen = True
         else:
             self.window.unfullscreen()
+            self.window.get_window().set_cursor(self.cursor_left)
             self.window_is_fullscreen = False
         #self.window.resize(*self.window.get_size())
         self.window.show_all()
@@ -206,6 +211,7 @@ class Player(object):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             self.logger.debug('prepare-window-handle')
             msg.src.set_window_handle(self.xid)
+            self.window.get_window().set_cursor(self.cursor_left)
 
     def on_buffering(self, bus, msg):
         buf = msg.parse_buffering()
