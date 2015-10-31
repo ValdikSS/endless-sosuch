@@ -64,49 +64,66 @@ class Player(object):
         self.user_agent = None
         self.cookie = None
 
-        self.build_playbin()
+        self.build_pipeline()
 
-    def build_playbin(self):
+    def build_pipeline(self):
         # Create GStreamer elements
         self.videobin = Gst.ElementFactory.make(self.video_sink ,'videosink')
-        self.audiobin = Gst.parse_launch('audioconvert name=audiosink ! ' + \
+        self.audiobin = Gst.parse_bin_from_description('audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor else '') \
-                    + self.audio_sink)
+                    + self.audio_sink, True)
+        self.decodebin = Gst.ElementFactory.make('decodebin', 'dec')
 
-        self.playbin = Gst.parse_launch('tee name=tee \
-            tee. ! queue name=filequeue \
-            tee. ! queue2 name=decodequeue use-buffering=true ! decodebin name=dec')
+        # Add everything to the pipeline
+        self.pipeline.add(self.decodebin)
+        self.decodebin.connect('pad-added', self.on_pad_added)
 
-        # Add playbin to the pipeline
-        self.pipeline.add(self.playbin)
-        self.playbin.get_by_name('dec').connect('pad-added', self.on_pad_added)
-        
-    def seturi(self, uri):
+    def reinit_pipeline(self, uri):
+        if self.pipeline.get_by_name('tee'):
+            self.pipeline.remove(self.tee_queue)
+        if self.pipeline.get_by_name('uri'):
+            self.pipeline.remove(self.source)
+        if self.pipeline.get_by_name('filesink'):
+            self.pipeline.remove(self.filesink)
+        if self.pipeline.get_by_name('videosink'):
+            self.pipeline.remove(self.videobin)
+        if self.pipeline.get_by_name('audiosink'):
+            self.pipeline.remove(self.audiobin)
+        self.filesink = None
+
         if 'http://' in uri or 'https://' in uri:
-            source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
-            source.set_property('user-agent', self.user_agent) if self.user_agent else None
-            source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
+            self.source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
+            self.source.set_property('user-agent', self.user_agent) if self.user_agent else None
+            self.source.set_property('cookies', ['cf_clearance=' + self.cookie]) if self.cookie else None
 
             if self.file_save_dir and not os.path.isfile(self.file_save_dir + '/' + os.path.basename(uri)):
-                filesink = Gst.ElementFactory.make('filesink' ,'filesink')
-                filesink.set_property('location', self.file_save_dir + '/' + os.path.basename(uri))
-                filesink.set_property('async', False)
+                self.tee_queue = Gst.parse_bin_from_description('tee name=tee \
+                                tee. ! queue name=filequeue \
+                                tee. ! queue2 name=decodequeue use-buffering=true', False)
+                self.filesink = Gst.ElementFactory.make('filesink' ,'filesink')
+                self.filesink.set_property('location', self.file_save_dir + '/' + os.path.basename(uri))
+                self.filesink.set_property('async', False)
             else:
-                filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
-                filesink.set_property('async', False)
+                self.tee_queue = Gst.parse_bin_from_description('tee name=tee ! queue2 name=decodequeue use-buffering=true', False)
+                self.filesink = None
         else:
-            source = Gst.ElementFactory.make('filesrc' ,'uri')
-            filesink = Gst.ElementFactory.make('fakesink' ,'filesink')
+            self.tee_queue = Gst.parse_bin_from_description('tee name=tee ! queue2 name=decodequeue use-buffering=true', False)
+            self.source = Gst.ElementFactory.make('filesrc' ,'uri')
+            self.filesink = None
 
-        self.playbin.add(source)
-        self.playbin.add(filesink)
-        source.link(self.pipeline.get_by_name('tee'))
-        self.pipeline.get_by_name('filequeue').link(filesink)
+        self.pipeline.add(self.tee_queue)
+        self.pipeline.get_by_name('decodequeue').link(self.decodebin)
+        self.pipeline.add(self.source)
+        if self.filesink:
+            self.pipeline.add(self.filesink)
+            self.pipeline.get_by_name('filequeue').link(self.filesink)
+        self.source.link(self.pipeline.get_by_name('tee'))
+        self.source.set_property('location', uri)
 
-        self.pipeline.get_by_name('uri').set_property('location', uri)
+    def seturi(self, uri):
+        self.reinit_pipeline(uri)
         self.window.set_title('Endless Sosuch | ' + os.path.basename(uri))
-
         self.uri = uri
 
     def run(self):
@@ -151,7 +168,6 @@ class Player(object):
                 pass
 
         self.pipeline.set_state(Gst.State.NULL)
-        self.pipeline.remove(self.playbin)
         if location:
             os.remove(location)
         self.is_paused = True
@@ -220,19 +236,18 @@ class Player(object):
         string = pad.query_caps(None).to_string()
         self.logger.debug('Pad added: {}'.format(string))
         if string.startswith('audio/'):
-            self.playbin.add(self.audiobin)
-            self.playbin.get_by_name('dec').link(self.playbin.get_by_name('audiosink'))
+            self.pipeline.add(self.audiobin)
+            self.decodebin.link(self.audiobin)
             self.audiobin.set_state(Gst.State.PLAYING)
             pass
         if string.startswith('video/'):
-            self.playbin.add(self.videobin)
-            self.playbin.get_by_name('dec').link(self.playbin.get_by_name('videosink'))
+            self.pipeline.add(self.videobin)
+            self.decodebin.link(self.videobin)
             self.videobin.set_state(Gst.State.PLAYING)
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
         self.stop(not(bus))
-        self.build_playbin()
         uri = self.get_queued_or_random()
         self.seturi(uri)
         self.play()
