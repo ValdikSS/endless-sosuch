@@ -34,8 +34,6 @@ class Player(object):
         self.window.set_default_size(800, 450)
         self.window.set_title('Endless Sosuch')
 
-        self.drawingarea = Gtk.DrawingArea()
-        self.window.add(self.drawingarea)
         self.window.connect("key-release-event", self.on_key_release)
 
         # Create GStreamer pipeline
@@ -116,7 +114,7 @@ class Player(object):
         # You need to get the XID after window.show_all().  You shouldn't get it
         # in the on_sync_message() handler because threading issues will cause
         # segfaults there.
-        videowindow = self.drawingarea.get_property('window')
+        videowindow = self.window.get_window()
         if sys.platform == 'win32':
             ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.c_void_p
             ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object]
@@ -198,8 +196,6 @@ class Player(object):
             self.window.unfullscreen()
             self.window.get_window().set_cursor(self.cursor_left)
             self.window_is_fullscreen = False
-        #self.window.resize(*self.window.get_size())
-        self.window.show_all()
 
     def toggle_play(self):
         if not self.is_paused:
