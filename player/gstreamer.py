@@ -69,7 +69,7 @@ class Player(object):
 
     def build_pipeline(self):
         # Create GStreamer elements
-        self.videobin = Gst.ElementFactory.make(self.video_sink ,'videosink')
+        self.videobin = Gst.parse_bin_from_description(self.video_sink, True)
         self.audiobin = Gst.parse_bin_from_description('audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor else '') \
