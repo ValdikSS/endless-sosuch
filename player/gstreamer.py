@@ -14,8 +14,7 @@ import time
 import logging
 import glob
 import sys
-if sys.platform == 'win32':
-    import ctypes
+import ctypes
 
 GObject.threads_init()
 Gst.init(None)
@@ -26,6 +25,8 @@ class NoDirectoryException(Exception):
 class Player(object):
     cursor_none = Gdk.Cursor.new(Gdk.CursorType.BLANK_CURSOR)
     cursor_left = Gdk.Cursor.new(Gdk.CursorType.LEFT_PTR)
+    if sys.platform == 'linux':
+        ctypes.cdll.LoadLibrary('libX11.so').XInitThreads()
 
     def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink'):
         self.logger = logging.getLogger('video')
