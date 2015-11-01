@@ -87,14 +87,10 @@ class Player(object):
             self.pipeline.remove(self.source)
         if self.pipeline.get_by_name('filesink'):
             self.pipeline.remove(self.filesink)
-        try:
+        if self.pipeline.get_by_name(self.videobin.get_name()):
             self.pipeline.remove(self.videobin)
-        except:
-            pass
-        try:
+        if self.pipeline.get_by_name(self.audiobin.get_name()):
             self.pipeline.remove(self.audiobin)
-        except:
-            pass
 
         if 'http://' in uri or 'https://' in uri:
             self.source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
