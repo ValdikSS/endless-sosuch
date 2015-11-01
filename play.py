@@ -16,7 +16,8 @@ if config.BACKEND == 'gstreamer':
         config.RANDOM_PATH if config.SAVE_FILES else None,
         config.AUDIO_COMPRESSOR,
         config.GSTREAMER_VIDEO_SINK,
-        config.GSTREAMER_AUDIO_SINK
+        config.GSTREAMER_AUDIO_SINK,
+        config.GSTREAMER_ADDITIONAL_PIPELINE
     )
 elif config.BACKEND == 'vlc':
     player = player.vlc.Player(

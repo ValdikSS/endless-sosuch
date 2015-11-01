@@ -4,7 +4,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('GdkX11', '3.0')
 gi.require_version('GstVideo', '1.0')
 gi.require_version('Gst', '1.0')
-from gi.repository import GObject, Gst, Gtk, Gdk
+from gi.repository import GObject, GLib, Gst, Gtk, Gdk
 from gi.repository import GdkX11, GstVideo
 import queue
 import os
@@ -28,7 +28,7 @@ class Player(object):
     if sys.platform == 'linux':
         ctypes.cdll.LoadLibrary('libX11.so').XInitThreads()
 
-    def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink'):
+    def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink', add_sink=None):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
@@ -58,6 +58,7 @@ class Player(object):
         self.use_compressor = use_compressor
         self.video_sink = video_sink
         self.audio_sink = audio_sink
+        self.add_sink = add_sink
         self.window_is_fullscreen = False
         self.is_paused = True
         self.uri = None
@@ -69,16 +70,35 @@ class Player(object):
 
     def build_pipeline(self):
         # Create GStreamer elements
-        self.videobin = Gst.parse_bin_from_description(self.video_sink, True)
-        self.audiobin = Gst.parse_bin_from_description('audioconvert name=audiosink ! ' + \
+        self.videobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! '
+            + self.video_sink, True)
+        self.audiobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! \
+                audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
-                ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor else '') \
+                ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor
+                else 'queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! ') \
                     + self.audio_sink, True)
         self.decodebin = Gst.ElementFactory.make('decodebin', 'dec')
+        self.audioconvert_tee = Gst.ElementFactory.make('audioconvert', 'audioconvert_tee')
+        self.videoconvert_tee = Gst.ElementFactory.make('videoconvert', 'videoconvert_tee')
+        self.audiotee = Gst.ElementFactory.make('tee', 'audiotee')
+        self.videotee = Gst.ElementFactory.make('tee', 'videotee')
+        if self.add_sink:
+            self.add_pipeline = Gst.parse_bin_from_description(self.add_sink, False)
+            self.pipeline.add(self.add_pipeline)
 
         # Add everything to the pipeline
         self.pipeline.add(self.decodebin)
+        self.pipeline.add(self.audioconvert_tee)
+        self.pipeline.add(self.videoconvert_tee)
+        self.pipeline.add(self.audiotee)
+        self.pipeline.add(self.videotee)
+
+        self.audioconvert_tee.link(self.audiotee)
+        self.videoconvert_tee.link(self.videotee)
+
         self.decodebin.connect('pad-added', self.on_pad_added)
+        self.decodebin.connect('no-more-pads', self.on_no_more_pads)
 
     def reinit_pipeline(self, uri):
         if self.pipeline.get_by_name('tee'):
@@ -121,6 +141,8 @@ class Player(object):
         self.source.link(self.pipeline.get_by_name('tee'))
         self.source.set_property('location', uri)
 
+        self.has_audio = False
+
     def seturi(self, uri):
         self.reinit_pipeline(uri)
         self.window.set_title('Endless Sosuch | ' + os.path.basename(uri))
@@ -143,7 +165,7 @@ class Player(object):
         self.seturi(self.get_queued_or_random())
         self.play()
         Gtk.main()
-        
+
     def play(self):
         if not self.is_paused:
             return
@@ -158,7 +180,7 @@ class Player(object):
 
         self.pipeline.set_state(Gst.State.PAUSED)
         self.is_paused = True
-        
+
     def stop(self, should_delete=False):
         location = None
         if should_delete:
@@ -171,7 +193,7 @@ class Player(object):
         if location:
             os.remove(location)
         self.is_paused = True
-    
+
     def quit(self, window = None):
         self.stop(True)
         Gtk.main_quit()
@@ -235,14 +257,26 @@ class Player(object):
         string = pad.query_caps(None).to_string()
         self.logger.debug('Pad added: {}'.format(string))
         if string.startswith('audio/'):
+            self.has_audio = True
             self.pipeline.add(self.audiobin)
-            self.decodebin.link(self.audiobin)
+            self.decodebin.link(self.audioconvert_tee)
+            self.audiotee.link(self.audiobin)
+            if self.add_sink:
+                self.audiotee.link(self.pipeline.get_by_name('aq'))
             self.audiobin.set_state(Gst.State.PLAYING)
-            pass
         if string.startswith('video/'):
             self.pipeline.add(self.videobin)
-            self.decodebin.link(self.videobin)
+            self.decodebin.link(self.videoconvert_tee)
+            self.videotee.link(self.videobin)
+            if self.add_sink:
+                self.videotee.link(self.pipeline.get_by_name('vq'))
             self.videobin.set_state(Gst.State.PLAYING)
+
+    def on_no_more_pads(self, element):
+        self.logger.debug('No more pads')
+        if not self.has_audio and self.add_sink:
+            # Can't handle it since additional pipeline always assumes audio
+            GLib.idle_add(self.on_eos, 0)
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
