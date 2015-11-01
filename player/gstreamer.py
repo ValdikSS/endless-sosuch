@@ -227,7 +227,6 @@ class Player(object):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             self.logger.debug('prepare-window-handle')
             msg.src.set_window_handle(self.xid)
-            self.window.get_window().set_cursor(self.cursor_left)
 
     def on_buffering(self, bus, msg):
         buf = msg.parse_buffering()
