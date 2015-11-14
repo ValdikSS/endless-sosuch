@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # coding: utf-8
-import player.gstreamer
-import player.vlc
 import updater.updater
 import signal
 import logging
@@ -12,6 +10,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 logger = logging.getLogger('main')
 
 if config.BACKEND == 'gstreamer':
+    import player.gstreamer
     player = player.gstreamer.Player(
         config.RANDOM_PATH if config.SAVE_FILES else None,
         config.AUDIO_COMPRESSOR,
@@ -20,6 +19,7 @@ if config.BACKEND == 'gstreamer':
         config.GSTREAMER_ADDITIONAL_PIPELINE
     )
 elif config.BACKEND == 'vlc':
+    import player.vlc
     player = player.vlc.Player(
         config.RANDOM_PATH if config.SAVE_FILES else None,
         config.AUDIO_COMPRESSOR,
