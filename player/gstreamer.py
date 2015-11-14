@@ -107,10 +107,6 @@ class Player(object):
             self.pipeline.remove(self.source)
         if self.pipeline.get_by_name('filesink'):
             self.pipeline.remove(self.filesink)
-        if self.pipeline.get_by_name(self.videobin.get_name()):
-            self.pipeline.remove(self.videobin)
-        if self.pipeline.get_by_name(self.audiobin.get_name()):
-            self.pipeline.remove(self.audiobin)
 
         if 'http://' in uri or 'https://' in uri:
             self.source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
@@ -258,25 +254,29 @@ class Player(object):
         self.logger.debug('Pad added: {}'.format(string))
         if string.startswith('audio/'):
             self.has_audio = True
-            self.pipeline.add(self.audiobin)
+            if not self.pipeline.get_by_name(self.audiobin.get_name()):
+                self.pipeline.add(self.audiobin)
             self.decodebin.link(self.audioconvert_tee)
             self.audiotee.link(self.audiobin)
             if self.add_sink:
                 self.audiotee.link(self.pipeline.get_by_name('aq'))
-            self.audiobin.set_state(Gst.State.PLAYING)
+            self.audiobin.sync_state_with_parent()
         if string.startswith('video/'):
-            self.pipeline.add(self.videobin)
+            if not self.pipeline.get_by_name(self.videobin.get_name()):
+                self.pipeline.add(self.videobin)
             self.decodebin.link(self.videoconvert_tee)
             self.videotee.link(self.videobin)
             if self.add_sink:
                 self.videotee.link(self.pipeline.get_by_name('vq'))
-            self.videobin.set_state(Gst.State.PLAYING)
+            self.videobin.sync_state_with_parent()
 
     def on_no_more_pads(self, element):
         self.logger.debug('No more pads')
         if not self.has_audio and self.add_sink:
             # Can't handle it since additional pipeline always assumes audio
             GLib.idle_add(self.on_eos, 0)
+        elif not self.has_audio:
+            self.pipeline.remove(self.audiobin)
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
