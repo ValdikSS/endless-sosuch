@@ -70,13 +70,13 @@ class Player(object):
 
     def build_pipeline(self):
         # Create GStreamer elements
-        self.videobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! '
+        self.videobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! '
             + self.video_sink, True)
-        self.audiobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! \
+        self.audiobin = Gst.parse_bin_from_description('queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! \
                 audioconvert name=audiosink ! ' + \
                 ('ladspa-sc4-1882-so-sc4 ratio=5 attack-time=5 release-time=120 threshold-level=-10 ! \
                 ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter input-gain=10 limit=-3 ! ' if self.use_compressor
-                else 'queue max-size-buffers=0 max-size-bytes=0 max-size-time=2000000000 ! ') \
+                else 'queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! ') \
                     + self.audio_sink, True)
         self.decodebin = Gst.ElementFactory.make('decodebin', 'dec')
         self.audioconvert_tee = Gst.ElementFactory.make('audioconvert', 'audioconvert_tee')
