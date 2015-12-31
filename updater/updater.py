@@ -45,7 +45,12 @@ class Thread(object):
     def parsevideos(self):
         self.videos.clear()
 
-        parser = json.loads(self.data.text)
+        try:
+            parser = json.loads(self.data.text)
+        except:
+            self.logger.error('Cannot parse thread JSON')
+            return
+
         for post in parser['threads'][0]['posts']:
             for postfile in post['files']:
                 if '.webm' in postfile['path']:
@@ -77,7 +82,11 @@ class Board(object):
         self.data = self.req.get(URL)
 
     def find_threads(self):
-        parser = json.loads(self.data.text)
+        try:
+            parser = json.loads(self.data.text)
+        except:
+            self.logger.error('Cannot parse board JSON')
+            return
 
         for thread in parser['threads']:
                 url = '/res/' + thread['posts'][0]['num'] + '.json'
