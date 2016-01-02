@@ -28,7 +28,8 @@ class Player(object):
     if sys.platform == 'linux':
         ctypes.cdll.LoadLibrary('libX11.so').XInitThreads()
 
-    def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink', audio_sink='autoaudiosink', add_sink=None):
+    def __init__(self, file_save_dir=False, use_compressor=False, video_sink='autovideosink',
+                 audio_sink='autoaudiosink', add_sink=None, buffering=True):
         self.logger = logging.getLogger('video')
         self.window = Gtk.Window()
         self.window.connect('destroy', self.quit)
@@ -65,6 +66,7 @@ class Player(object):
         self.empty_queue_callback = None
         self.user_agent = None
         self.cookie = None
+        self.buffering = buffering
 
         self.build_pipeline()
 
@@ -248,10 +250,11 @@ class Player(object):
 
     def on_buffering(self, bus, msg):
         buf = msg.parse_buffering()
-        if buf < 20:
-            self.pause()
-        elif buf >= 80:
-            self.play()
+        if self.buffering:
+            if buf < 20:
+                self.pause()
+            elif buf >= 80:
+                self.play()
 
     def on_pad_added(self, element, pad):
         string = pad.query_caps(None).to_string()

@@ -16,7 +16,8 @@ if config.BACKEND == 'gstreamer':
         config.AUDIO_COMPRESSOR,
         config.GSTREAMER_VIDEO_SINK,
         config.GSTREAMER_AUDIO_SINK,
-        config.GSTREAMER_ADDITIONAL_PIPELINE
+        config.GSTREAMER_ADDITIONAL_PIPELINE,
+        config.GSTREAMER_BUFFERING
     )
 elif config.BACKEND == 'vlc':
     import player.vlc

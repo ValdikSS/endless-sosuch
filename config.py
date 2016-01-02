@@ -27,6 +27,10 @@ AUDIO_COMPRESSOR = False
 GSTREAMER_VIDEO_SINK = 'autovideosink'
 GSTREAMER_AUDIO_SINK = 'autoaudiosink'
 
+# Use gstreamer buffering
+# Generally works fine but sometimes could stale a stream
+GSTREAMER_BUFFERING = True
+
 # Additional GStreamer pipeline. Can be used to stream video to the remote server
 # In order to use it, you should create two queues with names "vq" and "aq"
 #GSTREAMER_ADDITIONAL_PIPELINE = 'queue name=vq ! fakesink queue name=aq ! fakesink'
