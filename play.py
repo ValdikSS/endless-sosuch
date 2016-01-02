@@ -51,4 +51,5 @@ def on_empty_queue():
 player.register_on_video_queue_empty_callback(on_empty_queue)
 on_empty_queue()
 
-player.run()
+if __name__ == '__main__':
+    player.run()
