@@ -83,6 +83,7 @@ class Player(object):
         self.videoconvert_tee = Gst.ElementFactory.make('videoconvert', 'videoconvert_tee')
         self.audiotee = Gst.ElementFactory.make('tee', 'audiotee')
         self.videotee = Gst.ElementFactory.make('tee', 'videotee')
+        self.videoblackhole = Gst.ElementFactory.make('fakesink', 'videoblackhole')
         if self.add_sink:
             self.add_pipeline = Gst.parse_bin_from_description(self.add_sink, False)
             self.pipeline.add(self.add_pipeline)
@@ -107,6 +108,8 @@ class Player(object):
             self.pipeline.remove(self.source)
         if self.pipeline.get_by_name('filesink'):
             self.pipeline.remove(self.filesink)
+        if self.pipeline.get_by_name('videoblackhole'):
+            self.pipeline.remove(self.videoblackhole)
 
         if 'http://' in uri or 'https://' in uri:
             self.source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
@@ -138,6 +141,7 @@ class Player(object):
         self.source.set_property('location', uri)
 
         self.has_audio = False
+        self.has_video = False
 
     def seturi(self, uri):
         self.reinit_pipeline(uri)
@@ -252,6 +256,8 @@ class Player(object):
     def on_pad_added(self, element, pad):
         string = pad.query_caps(None).to_string()
         self.logger.debug('Pad added: {}'.format(string))
+        event = pad.get_sticky_event(Gst.EventType.STREAM_START, 0)
+        stream_flags = event.parse_stream_flags().value_names
         if string.startswith('audio/'):
             self.has_audio = True
             if not self.pipeline.get_by_name(self.audiobin.get_name()):
@@ -262,6 +268,13 @@ class Player(object):
                 self.audiotee.link(self.pipeline.get_by_name('aq'))
             self.audiobin.sync_state_with_parent()
         if string.startswith('video/'):
+            if self.has_video or ('GST_STREAM_FLAG_SELECT' not in stream_flags and not self.has_video):
+                # Blackholing 1-frame video stream (probably a preview)
+                self.logger.debug('Blackholing stream with flags {}'.format(stream_flags))
+                self.pipeline.add(self.videoblackhole)
+                element.link(self.videoblackhole)
+                return
+            self.has_video = True
             if not self.pipeline.get_by_name(self.videobin.get_name()):
                 self.pipeline.add(self.videobin)
             self.decodebin.link(self.videoconvert_tee)
