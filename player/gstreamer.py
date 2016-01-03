@@ -340,9 +340,10 @@ class Player(object):
         self.on_eos()
 
     def on_key_release(self, window, ev, data=None):
-        if ev.keyval == Gdk.KEY_s or ev.keyval == Gdk.KEY_S:
+        keyval = Gdk.keyval_to_lower(ev.keyval)
+        if keyval == Gdk.KEY_s:
             self.on_eos()
-        if ev.keyval == Gdk.KEY_d or ev.keyval == Gdk.KEY_d:
+        if keyval == Gdk.KEY_d:
             for i in range(9):
                 try:
                     self.videoqueue.get_nowait()
@@ -350,9 +351,9 @@ class Player(object):
                     break
             self.on_eos()
             # get random video from folder
-        elif ev.keyval == Gdk.KEY_Escape or ev.keyval == Gdk.KEY_q or ev.keyval == Gdk.KEY_Q:
+        elif keyval in (Gdk.KEY_Escape, Gdk.KEY_q):
             self.quit()
-        elif ev.keyval == Gdk.KEY_f or ev.keyval == Gdk.KEY_F:
+        elif keyval == Gdk.KEY_f:
             self.toggle_fullscreen()
-        elif ev.keyval == Gdk.KEY_space:
+        elif keyval == Gdk.KEY_space:
             self.toggle_play()
