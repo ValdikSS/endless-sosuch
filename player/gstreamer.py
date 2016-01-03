@@ -147,8 +147,8 @@ class Player(object):
 
     def seturi(self, uri):
         self.reinit_pipeline(uri)
-        self.window.set_title('Endless Sosuch | ' + os.path.basename(uri))
         self.uri = uri
+        self.update_titlebar()
 
     def run(self):
         self.window.show_all()
@@ -175,6 +175,7 @@ class Player(object):
         self.pipeline.set_state(Gst.State.PLAYING)
         self.logger.info('Playing {}'.format(self.uri))
         self.is_paused = False
+        GObject.timeout_add(100, self.update_titlebar)
 
     def pause(self):
         if self.is_paused:
@@ -242,6 +243,27 @@ class Player(object):
             self.pause()
         else:
             self.play()
+
+    def update_titlebar(self):
+        time_str = None
+        try:
+            dur = self.pipeline.query_duration(Gst.Format.TIME)[1]
+            pos = self.pipeline.query_position(Gst.Format.TIME)[1]
+
+            time_str = '%d:%.2d / %d:%.2d' % (
+                int(float(pos) / Gst.SECOND) // 60,
+                int(float(pos) / Gst.SECOND) % 60,
+                int(float(dur) / Gst.SECOND) // 60,
+                int(float(dur) / Gst.SECOND) % 60
+            )
+        except:
+            pass
+
+        self.window.set_title('Endless Sosuch | ' +
+                              os.path.basename(self.uri) + 
+                              (' | ' + time_str if time_str else ''))
+        
+        return not self.is_paused
 
     def on_sync_message(self, bus, msg):
         if msg.get_structure().get_name() == 'prepare-window-handle':

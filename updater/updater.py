@@ -92,7 +92,7 @@ class Board(object):
                 url = '/res/' + thread['posts'][0]['num'] + '.json'
                 body = thread['posts'][0]['comment']
                 is_webm = any(['webm' in file['path'] for file in thread['posts'][0]['files']])
-                if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])', body) and is_webm:
+                if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])|([ВвШш][Ее][Бб][Мм])', body) and is_webm:
                     if Thread(url) not in self.threads:
                         self.logger.info('Found new Webm thread: {}'.format(BASEURL + url))
                         self.threads.append(Thread(url))
