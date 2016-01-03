@@ -85,7 +85,6 @@ class Player(object):
         self.videoconvert_tee = Gst.ElementFactory.make('videoconvert', 'videoconvert_tee')
         self.audiotee = Gst.ElementFactory.make('tee', 'audiotee')
         self.videotee = Gst.ElementFactory.make('tee', 'videotee')
-        self.videoblackhole = Gst.ElementFactory.make('fakesink', 'videoblackhole')
         if self.add_sink:
             self.add_pipeline = Gst.parse_bin_from_description(self.add_sink, False)
             self.pipeline.add(self.add_pipeline)
@@ -110,8 +109,6 @@ class Player(object):
             self.pipeline.remove(self.source)
         if self.pipeline.get_by_name('filesink'):
             self.pipeline.remove(self.filesink)
-        if self.pipeline.get_by_name('videoblackhole'):
-            self.pipeline.remove(self.videoblackhole)
 
         if 'http://' in uri or 'https://' in uri:
             self.source = Gst.ElementFactory.make('souphttpsrc' ,'uri')
@@ -265,6 +262,20 @@ class Player(object):
         
         return not self.is_paused
 
+    def link_video(self, element=None, pad=None):
+        if not self.pipeline.get_by_name(self.videobin.get_name()):
+            self.pipeline.add(self.videobin)
+        if element and pad:
+            # If we have an element with a pad, we link exact pad to the
+            # video output. If not, link any pad from the decoder.
+            element.link_pads(pad.get_name(), self.videoconvert_tee, None)
+        else:
+            self.decodebin.link(self.videoconvert_tee)
+        self.videotee.link(self.videobin)
+        if self.add_sink:
+            self.videotee.link(self.pipeline.get_by_name('vq'))
+        self.videobin.sync_state_with_parent()
+
     def on_sync_message(self, bus, msg):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             self.logger.debug('prepare-window-handle')
@@ -294,19 +305,12 @@ class Player(object):
             self.audiobin.sync_state_with_parent()
         if string.startswith('video/'):
             if self.has_video or ('GST_STREAM_FLAG_SELECT' not in stream_flags and not self.has_video):
-                # Blackholing 1-frame video stream (probably a preview)
-                self.logger.debug('Blackholing stream with flags {}'.format(stream_flags))
-                self.pipeline.add(self.videoblackhole)
-                element.link(self.videoblackhole)
-                return
+                # Not linking a video stream without default flag (probably a preview) or if it's not
+                # a first video stream
+                self.logger.debug('Not linking stream with flags {}'.format(stream_flags))
+                return False
             self.has_video = True
-            if not self.pipeline.get_by_name(self.videobin.get_name()):
-                self.pipeline.add(self.videobin)
-            self.decodebin.link(self.videoconvert_tee)
-            self.videotee.link(self.videobin)
-            if self.add_sink:
-                self.videotee.link(self.pipeline.get_by_name('vq'))
-            self.videobin.sync_state_with_parent()
+            self.link_video(element, pad)
 
     def on_no_more_pads(self, element):
         self.logger.debug('No more pads')
@@ -315,6 +319,13 @@ class Player(object):
             GLib.idle_add(self.on_eos, 0)
         elif not self.has_audio:
             self.pipeline.remove(self.audiobin)
+        if not self.has_video:
+            # A workaround for a bit wrongly muxed video files with no default flag on a video stream.
+            # If we haven't linked a video in on_pad_added and there are no other video streams, we should
+            # re-link it to the output.
+            self.logger.info('Wrongly muxed video file detected. Re-linking video output.')
+            self.has_video = True
+            self.link_video()
 
     def on_eos(self, bus=None, msg=None):
         self.logger.debug('on_eos()')
