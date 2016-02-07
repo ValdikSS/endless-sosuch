@@ -6,6 +6,14 @@ RANDOM_PATH = 'webm'
 # Should we save all played to the end files to that directory?
 SAVE_FILES = True
 
+# Keywords in an OP's post to search for
+INCLUDE_KEYWORDS = r'(?i)(([WEBM]|[ЦУИЬ])|([ВШ][ЕБМ]))'
+#INCLUDE_KEYWORDS = None
+
+# Keywords to exclude
+#EXCLUDE_KEYWORDS = r'(?i)((анимублядский)|(порн))'
+EXCLUDE_KEYWORDS = None
+
 # Cloudflare "cf_clearance" cookie value
 # Currently supported only by gstreamer backend
 CF_COOKIE = '861a0566de1421f863f81936700d70e6f9d15356-1444513397-604800'

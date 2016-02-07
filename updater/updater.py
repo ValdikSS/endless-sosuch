@@ -81,7 +81,8 @@ class Board(object):
     def update(self):
         self.data = self.req.get(URL)
 
-    def find_threads(self):
+    def find_threads(self, include=r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])|([ВвШш][Ее][Бб][Мм])',
+                     exclude=None):
         try:
             parser = json.loads(self.data.text)
         except:
@@ -92,7 +93,7 @@ class Board(object):
                 url = '/res/' + thread['posts'][0]['num'] + '.json'
                 body = thread['posts'][0]['comment']
                 is_webm = any(['webm' in file['path'] for file in thread['posts'][0]['files']])
-                if re.search(r'([Ww][Ee][Bb][Mm])|([Цц][Уу][Ии][Ьь])|([ВвШш][Ее][Бб][Мм])', body) and is_webm:
+                if is_webm and re.search(include, body) and not (re.search(exclude, body) if exclude else False):
                     if Thread(url) not in self.threads:
                         self.logger.info('Found new Webm thread: {}'.format(BASEURL + url))
                         self.threads.append(Thread(url))
