@@ -172,7 +172,7 @@ class Player(object):
         self.pipeline.set_state(Gst.State.PLAYING)
         self.logger.info('Playing {}'.format(self.uri))
         self.is_paused = False
-        GObject.timeout_add(100, self.update_titlebar)
+        GObject.timeout_add_seconds(1, self.update_titlebar)
 
     def pause(self):
         if self.is_paused:
