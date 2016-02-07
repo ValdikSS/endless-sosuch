@@ -38,6 +38,8 @@ class Player(object):
 
         self.window.connect("key-release-event", self.on_key_release)
 
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
         # Create GStreamer pipeline
         self.pipeline = Gst.Pipeline()
 
@@ -198,6 +200,9 @@ class Player(object):
         self.stop(True)
         Gtk.main_quit()
 
+    def copy_to_clipboard(self, textdata):
+        self.clipboard.set_text(textdata, -1)
+
     def set_random_directory(self, randomdir):
         self.randomdir = randomdir
 
@@ -355,5 +360,7 @@ class Player(object):
             self.quit()
         elif keyval == Gdk.KEY_f:
             self.toggle_fullscreen()
+        elif keyval == Gdk.KEY_c:
+            self.copy_to_clipboard(self.uri)
         elif keyval == Gdk.KEY_space:
             self.toggle_play()

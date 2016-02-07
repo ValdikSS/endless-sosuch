@@ -15,6 +15,7 @@
 * **d** для пропуска 10 видео
 * **q** или **Escape** для выхода
 * **f** чтобы перейти в полноэкранный режим
+* **c** чтобы скопировать ссылку в буфер
 * **Space** для паузы
 
 ### Как использовать
@@ -39,6 +40,7 @@ Regular and child porn, John Cena, Everybody knows shit's fucked, † CΛIN † 
 * **d** to skip 10 videos
 * **q** or **Escape** to **q**uit
 * **f** to go **f**ullscreen
+* **c** to copy link into buffer
 * **Space** to **pause**
 
 ### How to use
