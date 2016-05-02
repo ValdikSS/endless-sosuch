@@ -145,6 +145,8 @@ class Player(object):
         self.has_video = False
 
     def seturi(self, uri):
+        if not uri:
+            return
         self.reinit_pipeline(uri)
         self.uri = uri
         self.update_titlebar()
@@ -336,8 +338,11 @@ class Player(object):
         self.logger.debug('on_eos()')
         self.stop(not(bus))
         uri = self.get_queued_or_random()
-        self.seturi(uri)
-        self.play()
+        if uri:
+            self.seturi(uri)
+            self.play()
+        else:
+            self.on_eos()
 
     def on_error(self, bus, msg):
         self.logger.error('on_error(): {}'.format(msg.parse_error()))
