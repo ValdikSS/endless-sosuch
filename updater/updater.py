@@ -6,10 +6,12 @@ import logging
 import sys
 
 URL = 'https://2ch.hk/b/index.json'
-BASEURL = 'https://2ch.hk/b/'
+BASEURL = 'https://2ch.hk'
+BASEURL_BOARD = 'https://2ch.hk/b'
 if sys.platform == 'win32':
     # GnuTLS crashes on HTTPS, dunno why.
-    BASEURL = 'http://2ch.hk/b/'
+    BASEURL = 'http://2ch.hk/b'
+    BASEURL_BOARD = 'http://2ch.hk/b'
 
 class Thread(object):
     def __init__(self, url=None):
@@ -36,7 +38,7 @@ class Thread(object):
         else:
             req = requests.Session()
 
-        self.data = req.get(BASEURL + self.url)
+        self.data = req.get(BASEURL_BOARD + self.url)
         if self.data.status_code != requests.codes.ok:
             self.logger.info('Thread is unavailable')
             return False
@@ -95,7 +97,7 @@ class Board(object):
                 is_webm = any(['webm' in file['path'] for file in thread['posts'][0]['files']])
                 if is_webm and re.search(include, body) and not (re.search(exclude, body) if exclude else False):
                     if Thread(url) not in self.threads:
-                        self.logger.info('Found new Webm thread: {}'.format(BASEURL + url))
+                        self.logger.info('Found new Webm thread: {}'.format(BASEURL_BOARD + url))
                         self.threads.append(Thread(url))
         if not self.threads:
             self.logger.info('No threads found!')
